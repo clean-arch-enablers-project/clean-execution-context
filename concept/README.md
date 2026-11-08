@@ -47,6 +47,8 @@ flowchart TD
     outer --> second["Another execution<br/>Correlation ID: <b><i>execution-2</i></b>"]
     first --> account["Application <b><i>A</i></b><br/>Inner flow: <b><i>Create Account</i></b>"]
     first --> workspace["Application <b><i>B</i></b><br/>Inner flow: <b><i>Provision Workspace</i></b>"]
+    second --> account2["Application <b><i>A</i></b><br/>Inner flow: <b><i>Create Account</i></b>"]
+    second --> workspace2["Application <b><i>B</i></b><br/>Inner flow: <b><i>Provision Workspace</i></b>"]
 
     classDef default fill:#000000,stroke:#ffffff,color:#ffffff
 ```
