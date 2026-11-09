@@ -18,7 +18,7 @@ An **Execution Context** is a container that accompanies the work and brings thi
 
 The execution context is a standalone component that application code can import and use directly. It does not require an application framework, a dependency injection container, or a framework-managed execution lifecycle.
 
-The caller creates the context, supplies the execution information, and passes it to participating operations. Those operations use its APIs to record metadata and access resources shared within the inner flow. The same approach works in a script, a command-line tool, or a framework-based application.
+The caller creates the context, supplies the execution information, and passes it to participating operations. Those operations use the execution context's APIs to record metadata and access resources shared within the inner flow. The same approach works in a script, a command-line tool, or a framework-based application.
 
 The calling code explicitly controls where the context is created, how it is passed, and when the recorded work starts and finishes.
 
@@ -57,7 +57,7 @@ flowchart TD
 
 #### Actor
 
-The **actor** is the user or system acting within the execution. When present, it carries an identifier and a collection of **scopes**: values describing the permissions or access associated with that actor.
+The **actor** is the user or system acting within the execution. When present, the actor information includes an identifier and a collection of **scopes**: values describing the permissions or access associated with that actor.
 
 For example, an application might use the actor's identity and scopes to decide whether it may create accounts on behalf of another user.
 
@@ -69,7 +69,7 @@ Authentication establishes who the actor is; authorization determines whether th
 
 The **inner flow** represents the workflow being executed within the application, typically a [use case](https://github.com/clean-arch-enablers-project/clean-use-cases/blob/feature/hello-world/concept/README.md). Its metadata describes the execution as a whole and groups its recorded operations and shared resources.
 
-A **step** is an operation tracked within that workflow. ***Create Account*** workflow might record ***Find Existing Account*** and ***Save Account*** as steps, each with its own timing and outcome.
+A **step** is an operation tracked within that workflow. The ***Create Account*** workflow might record ***Find Existing Account*** and ***Save Account*** as steps, each with its own timing and outcome.
 
 Calls to **ports** are a primary use. A port is a contract declaring an operation the workflow needs from a dependency, such as retrieving or saving an account. Steps can also record internal operations and ordinary method calls; tracking an operation does not require a port or a particular architectural interface.
 
@@ -117,7 +117,7 @@ flowchart TD
 
 Several operations within one workflow may need the same resource. For example, multiple database operations might participate in one transaction that should be committed only if the whole workflow succeeds.
 
-The inner flow's metadata holds these resources in a map, allowing participating code to retrieve them by name. Their scope is the current inner flow, rather than application-wide storage.
+The inner flow's metadata holds the shared resources in a map, allowing participating operations to retrieve each resource by name. The shared resources belong to the current inner flow rather than application-wide storage.
 
 An **inner flow shared resource** holds the actual resource together with **completion hooks**: callbacks for actions to perform when the inner flow finishes.
 
@@ -137,7 +137,7 @@ flowchart TD
     classDef default fill:#000000,stroke:#ffffff,color:#ffffff
 ```
 
-The code responsible for a resource must also define who releases it. Making the resource accessible through the context does not establish ownership by itself. The rules for hook ordering and failures must be explicit so a completion error does not obscure the original workflow failure.
+The code responsible for a resource must also define who releases it. Making the resource accessible through the context does not establish ownership by itself. The rules for completion-hook ordering and completion-hook failures must be explicit so a completion error does not obscure the original workflow failure.
 
 Separate executions keep their mutable data separate. If operations run concurrently within one execution, access to shared data and resources requires coordination.
 
@@ -147,7 +147,7 @@ Separate executions keep their mutable data separate. If operations run concurre
 
 The execution context connects a particular execution to the broader process, the actor involved, and the workflow running within an application. The inner flow and its steps describe what happened at each level, while shared resources allow participating operations to work with resources scoped to that workflow.
 
-This provides a consistent account of an execution for application code and diagnostic tools. Logging, metrics, and other monitoring mechanisms decide how to consume and publish that information.
+The execution context's structured information provides a consistent account of an execution for application code and diagnostic tools. Logging, metrics, and other monitoring mechanisms decide how to consume and publish that information.
 
 <br>
 <br>
