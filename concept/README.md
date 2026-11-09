@@ -33,9 +33,9 @@ A **correlation ID** identifies that specific execution instance. Participating 
 The process itself is described at two levels:
 
 - **Outer flow:** the broader process across the system, such as ***New User Creation***. The **outer-flow ID** identifies this process and remains the same across its different execution instances.
-- **Inner flow:** the workflow performed within a single application as a part of the broader outer flow, such as ***Create Account*** or ***Provision Workspace***. Such an application capability can also be called a **use case**.
+- **Inner flow:** the workflow performed within a single application as a part of the broader outer flow, such as ***Create Account*** or ***Provision Workspace***. Such an application capability can also be called a **[use case](https://github.com/clean-arch-enablers-project/clean-use-cases/blob/feature/hello-world/concept/README.md)**.
 
-When ***Alice***'s user is created, ***Create Account*** (use case ***A***) and ***Provision Workspace*** (use case ***B***) participate in one execution of ***New User Creation*** (outer flow) and share its correlation ID. Creating ***Bob***'s user involves the same outer-flow ID, but a different correlation ID. Each application's inner flow retains its own execution metadata and outcome.
+When ***Alice***'s user is created, ***Create Account*** ([use case](https://github.com/clean-arch-enablers-project/clean-use-cases/blob/feature/hello-world/concept/README.md) ***A***) and ***Provision Workspace*** ([use case](https://github.com/clean-arch-enablers-project/clean-use-cases/blob/feature/hello-world/concept/README.md) ***B***) participate in one execution of ***New User Creation*** (outer flow) and share its correlation ID. Creating ***Bob***'s user involves the same outer-flow ID, but a different correlation ID. Each application's inner flow retains its own execution metadata and outcome.
 
 The execution context carries the correlation ID, outer-flow ID, optional actor, and metadata for the current inner flow.
 
@@ -67,7 +67,7 @@ Authentication establishes who the actor is; authorization determines whether th
 
 #### Inner Flow and Steps
 
-The **inner flow** represents the workflow being executed within the application, typically a use case. Its metadata describes the execution as a whole and groups its recorded operations and shared resources.
+The **inner flow** represents the workflow being executed within the application, typically a [use case](https://github.com/clean-arch-enablers-project/clean-use-cases/blob/feature/hello-world/concept/README.md). Its metadata describes the execution as a whole and groups its recorded operations and shared resources.
 
 A **step** is an operation tracked within that workflow. ***Create Account*** workflow might record ***Find Existing Account*** and ***Save Account*** as steps, each with its own timing and outcome.
 
