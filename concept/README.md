@@ -39,6 +39,8 @@ When ***Alice***'s user is created, ***Create Account*** ([use case](https://git
 
 The execution context carries the correlation ID, outer-flow ID, optional actor, and metadata for the current inner flow.
 
+Related applications share execution identity, not one mutable context object. Each application records its own inner flow while carrying forward the correlation ID and outer-flow ID through the request or event that continues the process. A shared correlation ID therefore connects local execution records without merging their timing, steps, or outcomes.
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'lineColor': '#ffffff', 'edgeLabelBackground': '#000000', 'primaryTextColor': '#ffffff'}}}%%
 flowchart TD
@@ -96,6 +98,8 @@ Inner flow unit metadata and step unit metadata specialize this common metadata.
 2. Starting records the beginning of the work.
 3. Completion records success or failure and the end time.
 
+Starting and completion are lifecycle transitions for a particular execution record. Before completion, an outcome has not yet been established. Completed duration and outcome are read from the finished record; a later invocation needs its own execution record rather than restarting an earlier one.
+
 Input, output, and exceptions can contain sensitive information. Recording them does not automatically make them suitable for exposure; the application must decide what may be shared and with whom.
 
 ```mermaid
@@ -139,6 +143,8 @@ flowchart TD
 
 The code responsible for a resource must also define who releases it. Making the resource accessible through the context does not establish ownership by itself. The rules for completion-hook ordering and completion-hook failures must be explicit so a completion error does not obscure the original workflow failure.
 
+Resource names identify shared resources within the current inner flow. Registering a second resource under an existing name must have explicit conflict behavior, rather than silently losing the first resource and its completion actions. Retrieving a named resource also requires the participating operation to use the expected resource type.
+
 Separate executions keep their mutable data separate. If operations run concurrently within one execution, access to shared data and resources requires coordination.
 
 <br>
@@ -148,6 +154,8 @@ Separate executions keep their mutable data separate. If operations run concurre
 The execution context connects a particular execution to the broader process, the actor involved, and the workflow running within an application. The inner flow and its steps describe what happened at each level, while shared resources allow participating operations to work with resources scoped to that workflow.
 
 The execution context's structured information provides a consistent account of an execution for application code and diagnostic tools. Logging, metrics, and other monitoring mechanisms decide how to consume and publish that information.
+
+For example, [Clean Autofeatures](https://github.com/clean-arch-enablers-project/clean-autofeatures/blob/feature/hello-world/concept/README.md) supplies autolog, autometrics, and autonotify components that consume completed execution information. [Clean Setup](https://github.com/clean-arch-enablers-project/clean-setup/blob/feature/hello-world/concept/README.md) is the separate concept that selects those components for a workflow. The execution context supplies their information without choosing which consumers participate.
 
 <br>
 <br>
