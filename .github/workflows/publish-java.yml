@@ -1,0 +1,68 @@
+name: Publish Java to Maven Central
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maven-central-java
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test release decisions
+        run: python3 -W error -m unittest discover -s .github/scripts -p 'test_*.py'
+      - name: Determine whether the Java version needs publishing
+        id: release
+        run: python3 .github/scripts/release.py
+      - uses: actions/setup-java@v5
+        if: steps.release.outputs.publish == 'true'
+        with:
+          distribution: temurin
+          java-version: "25"
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+      - name: Verify the release against published dependencies
+        if: steps.release.outputs.publish == 'true'
+        run: >-
+          mvn -B -ntp -f implementations/java/pom.xml
+          "-Dmaven.repo.local=$RUNNER_TEMP/release-maven-repository"
+          clean verify
+      - name: Sign and publish the verified release
+        if: steps.release.outputs.publish == 'true'
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        run: |
+          for name in MAVEN_CENTRAL_USERNAME MAVEN_CENTRAL_PASSWORD MAVEN_GPG_KEY; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Configure the GitHub Actions secret $name before publishing."
+              exit 1
+            fi
+          done
+          mvn -B -ntp -f implementations/java/pom.xml \
+            "-Dmaven.repo.local=$RUNNER_TEMP/release-maven-repository" \
+            -Prelease -DskipTests deploy
+      - name: Upload verification reports
+        if: always() && steps.release.outputs.publish == 'true'
+        uses: actions/upload-artifact@v6
+        with:
+          name: java-release-quality-reports
+          path: |
+            implementations/java/target/surefire-reports/
+            implementations/java/target/site/jacoco/

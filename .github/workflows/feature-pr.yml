@@ -1,0 +1,84 @@
+name: Open feature pull request
+
+on:
+  push:
+    branches:
+      - "feature/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: feature-pr-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  open-pull-request:
+    if: github.event.deleted != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Open or reuse the feature branch pull request
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const repository = context.repo;
+            const base = "main";
+            const head = context.ref.replace(/^refs\/heads\//, "");
+            const findExisting = async () => {
+              const response = await github.rest.pulls.list({
+                ...repository,
+                state: "open",
+                head: `${repository.owner}:${head}`,
+                base,
+                per_page: 1
+              });
+              return response.data[0];
+            };
+
+            const existing = await findExisting();
+            if (existing) {
+              core.info(`Pull request already exists: ${existing.html_url}`);
+              return;
+            }
+
+            const comparison = await github.rest.repos.compareCommitsWithBasehead({
+              ...repository,
+              basehead: `${base}...${head}`
+            });
+            if (comparison.data.ahead_by === 0 || comparison.data.files?.length === 0) {
+              core.info("The feature branch has no changes to propose to main.");
+              return;
+            }
+
+            try {
+              const response = await github.rest.pulls.create({
+                ...repository,
+                base,
+                head,
+                title: `Merge ${head} into main`,
+                body: [
+                  "This pull request proposes the feature branch changes for `main`.",
+                  "",
+                  "Created automatically after a push. Further pushes to this branch update the same pull request."
+                ].join("\n")
+              });
+              core.info(`Created pull request: ${response.data.html_url}`);
+            } catch (error) {
+              if (error.status === 422) {
+                const concurrent = await findExisting();
+                if (concurrent) {
+                  core.info(`Pull request already exists: ${concurrent.html_url}`);
+                  return;
+                }
+              }
+              if (error.status === 403) {
+                core.setFailed(
+                  "PR creation was denied. Enable 'Allow GitHub Actions to create and approve pull requests' " +
+                  "under Settings > Actions > General, and check organization policy. " + error.message
+                );
+                return;
+              }
+              throw error;
+            }

@@ -1,0 +1,42 @@
+name: Java verification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "implementations/java/**"
+      - ".github/workflows/**"
+      - ".github/scripts/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: implementations/java
+    steps:
+      - uses: actions/checkout@v6
+      - name: Test release decisions
+        working-directory: .
+        run: python3 -W error -m unittest discover -s .github/scripts -p 'test_*.py'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - name: Verify warnings, tests, coverage, and documentation
+        run: >-
+          mvn -B -ntp
+          "-Dmaven.repo.local=$RUNNER_TEMP/verification-maven-repository"
+          clean verify
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: java-quality-reports
+          path: |
+            implementations/java/target/surefire-reports/
+            implementations/java/target/site/jacoco/
