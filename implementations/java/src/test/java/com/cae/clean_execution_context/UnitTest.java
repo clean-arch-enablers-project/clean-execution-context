@@ -9,14 +9,21 @@ class UnitTest {
     @Test
     void rejectsOutcomeAndLatencyQueriesBeforeCompletion() {
         var step = new StepUnit();
+        assertNull(step.getStartTime());
+        assertNull(step.getEndTime());
         assertThrows(InternalMappedException.class, step::complete);
         assertThrows(InternalMappedException.class, step::calculateLatency);
         assertThrows(InternalMappedException.class, step::wasSuccessful);
 
         step.setIdAndStartTracking("send", Direction.OUTBOUND);
+        var startedAt = step.getStartTime();
+        assertNotNull(startedAt);
+        assertNull(step.getEndTime());
         assertThrows(InternalMappedException.class, step::calculateLatency);
         assertThrows(InternalMappedException.class, step::wasSuccessful);
         step.complete();
+        assertEquals(startedAt, step.getStartTime());
+        assertNotNull(step.getEndTime());
         assertTrue(step.wasSuccessful());
         assertEquals(step.calculateLatency(), step.calculateLatency());
     }

@@ -20,7 +20,7 @@ Add the following dependency to the `<dependencies>` section of your application
 <dependency>
     <groupId>com.clean-arch-enablers</groupId>
     <artifactId>clean-execution-context</artifactId>
-    <version>1.0.0-RC1</version>
+    <version>1.0.0-RC2</version>
 </dependency>
 ```
 
@@ -161,6 +161,7 @@ The completion and query methods expose the [common execution metadata](../../co
 | `getInput()`, `getOutput()`, `getException()` | Read optional input, output, and the original failure. |
 | `wasSuccessful()` | Check whether a completed unit recorded an exception. |
 | `calculateLatency()` | Read elapsed time in milliseconds after completion. |
+| `getStartTime()`, `getEndTime()` | Read the recorded start and end timestamps. A timestamp is null until its event occurs. |
 
 ```java
 import com.cae.clean_execution_context.ExecutionContext;
@@ -182,6 +183,7 @@ String operation = flow.getId();
 var direction = flow.getDirection();
 long elapsedMillis = flow.calculateLatency();
 System.out.println(operation + " (" + direction + ") took " + elapsedMillis + " ms");
+System.out.println("Recorded from " + flow.getStartTime() + " to " + flow.getEndTime());
 System.out.println("Input: " + flow.getInput().orElseThrow()); // account-42
 System.out.println("Output: " + flow.getOutput().orElseThrow()); // workspace-42
 System.out.println("Flow succeeded: " + flow.wasSuccessful()); // true

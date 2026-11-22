@@ -21,6 +21,22 @@ public abstract class TimeTracker {
     public TimeTracker() {
     }
 
+    /**
+     * Returns the most recent start timestamp.
+     * @return the start timestamp, or null before tracking starts
+     */
+    public Instant getStartTime() {
+        return this.startTime;
+    }
+
+    /**
+     * Returns the most recent completion timestamp.
+     * @return the end timestamp, or null before tracking completes
+     */
+    public Instant getEndTime() {
+        return this.endTime;
+    }
+
     /** Records a start time and clears the previous end time and cached latency. */
     protected void startTracking(){
         this.startTime = Instant.now();
