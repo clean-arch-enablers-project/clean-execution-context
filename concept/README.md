@@ -91,6 +91,7 @@ Both an inner flow and a step represent work being executed. They therefore shar
 - **Status:** whether the completed unit was successful or unsuccessful.
 - **Input and output:** optional records of what the unit receives and produces.
 - **Exception:** the failure associated with the unit, when present.
+- **Execution annotations:** ordered notes about what happened within the unit, such as a cache hit or a retry attempt.
 
 Inner flow unit metadata and step unit metadata specialize this common metadata. Each recorded unit has its own lifecycle:
 
@@ -109,7 +110,7 @@ flowchart TD
     context -->|Contains| flow["Inner flow unit metadata"]
     flow -->|Records| steps["Step unit metadata"]
     flow -->|Holds by name| resources["Inner flow shared resources"]
-    flow -.->|Specializes| common["Executable unit metadata<br/>Subject · direction · timing<br/>Status · input/output · exception"]
+    flow -.->|Specializes| common["Executable unit metadata<br/>Subject · direction · timing<br/>Status · input/output · exception<br/>Execution annotations"]
     steps -.->|Specializes| common
 
     classDef default fill:#000000,stroke:#ffffff,color:#ffffff

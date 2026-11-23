@@ -2,6 +2,8 @@ package com.cae.clean_execution_context;
 
 import com.cae.clean_mapped_exceptions.specifics.InternalMappedException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -20,6 +22,7 @@ public abstract class Unit extends TimeTracker {
     protected Object input;
     /** The recorded output, or null if absent. */
     protected Object output;
+    private final List<String> annotations = new ArrayList<>();
 
     /** Creates a unit that is awaiting its start. */
     public Unit() {
@@ -36,6 +39,7 @@ public abstract class Unit extends TimeTracker {
         this.exception = null;
         this.input = null;
         this.output = null;
+        this.annotations.clear();
         this.startTracking();
     }
 
@@ -51,6 +55,7 @@ public abstract class Unit extends TimeTracker {
         this.input = input;
         this.exception = null;
         this.output = null;
+        this.annotations.clear();
         this.startTracking();
     }
 
@@ -162,5 +167,39 @@ public abstract class Unit extends TimeTracker {
      */
     public Optional<Object> getOutput() {
         return Optional.ofNullable(output);
+    }
+
+    /**
+     * Appends a text annotation to this execution, such as a cache hit or retry attempt.
+     * @param annotation the execution note to append
+     * @throws InternalMappedException if the annotation is null
+     */
+    public void addAnnotation(String annotation) {
+        this.annotations.add(requireAnnotation(annotation));
+    }
+
+    /**
+     * Appends execution annotations in the order supplied.
+     * @param annotations the execution notes to append
+     * @throws InternalMappedException if the list or one of its entries is null
+     */
+    public void addAnnotations(List<String> annotations) {
+        var supplied = Optional.ofNullable(annotations)
+                .orElseThrow(() -> new InternalMappedException("Unit execution annotations are required"));
+        this.annotations.addAll(supplied.stream().map(Unit::requireAnnotation).toList());
+    }
+
+    /**
+     * Returns an immutable snapshot of the execution annotations in insertion order.
+     * Starting a new execution on this unit clears the annotations.
+     * @return the recorded execution notes
+     */
+    public List<String> getAnnotations() {
+        return List.copyOf(this.annotations);
+    }
+
+    private static String requireAnnotation(String annotation) {
+        return Optional.ofNullable(annotation)
+                .orElseThrow(() -> new InternalMappedException("A unit execution annotation is required"));
     }
 }

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.clean-arch-enablers</groupId>
     <artifactId>clean-execution-context</artifactId>
-    <version>1.0.0-RC2</version>
+    <version>1.0.0-RC3</version>
     <name>Clean Execution Context</name>
     <description>Java implementation of the Clean Execution Context concept</description>
     <url>https://github.com/clean-arch-enablers-project/clean-execution-context</url>

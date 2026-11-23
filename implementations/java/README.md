@@ -20,7 +20,7 @@ Add the following dependency to the `<dependencies>` section of your application
 <dependency>
     <groupId>com.clean-arch-enablers</groupId>
     <artifactId>clean-execution-context</artifactId>
-    <version>1.0.0-RC2</version>
+    <version>1.0.0-RC3</version>
 </dependency>
 ```
 
@@ -159,6 +159,8 @@ The completion and query methods expose the [common execution metadata](../../co
 | `complete(Object output, Exception exception)` | Record both output and the original failure, such as a partial result. |
 | `getId()`, `getDirection()` | Read which operation ran and its direction. |
 | `getInput()`, `getOutput()`, `getException()` | Read optional input, output, and the original failure. |
+| `addAnnotation(String)`, `addAnnotations(List<String>)` | Append text notes about the current unit, such as a cache miss or a retry attempt. |
+| `getAnnotations()` | Read an immutable snapshot of the unit's notes in insertion order. |
 | `wasSuccessful()` | Check whether a completed unit recorded an exception. |
 | `calculateLatency()` | Read elapsed time in milliseconds after completion. |
 | `getStartTime()`, `getEndTime()` | Read the recorded start and end timestamps. A timestamp is null until its event occurs. |
@@ -166,15 +168,17 @@ The completion and query methods expose the [common execution metadata](../../co
 ```java
 import com.cae.clean_execution_context.ExecutionContext;
 
+import java.util.List;
+
 var context = ExecutionContext.of("gateway/request:42");
 var flow = context.startInnerFlowAsInbound("provision-workspace", "account-42");
 
 var lookup = flow.addOutboundStepOf("directory-lookup", "account-42");
+lookup.addAnnotations(List.of("autocache: miss", "autoretry: attempt 1"));
 lookup.complete(new IllegalStateException("Directory unavailable"));
 
 // The application recovers using the cached account.
-var cache = flow.addLocalStepOf("read-cached-account", "account-42");
-cache.complete("cached account");
+lookup.addAnnotation("fallback: cached account");
 flow.addOutboundStepOf("save-workspace", "account-42").complete("workspace-42");
 flow.complete("workspace-42");
 
@@ -189,6 +193,7 @@ System.out.println("Output: " + flow.getOutput().orElseThrow()); // workspace-42
 System.out.println("Flow succeeded: " + flow.wasSuccessful()); // true
 System.out.println("Lookup succeeded: " + lookup.wasSuccessful()); // false
 Exception lookupFailure = lookup.getException().orElseThrow();
+List<String> lookupAnnotations = lookup.getAnnotations();
 
 // Use the two-argument overload when a failed operation also has partial output.
 var migration = ExecutionContext.of("job:47").startInnerFlowAsLocal("migrate-workspace");
